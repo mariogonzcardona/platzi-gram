@@ -11,20 +11,20 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('users', '0001_initial'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Profile',
+            name='Post',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('website', models.URLField(blank=True)),
-                ('biography', models.TextField(blank=True)),
-                ('phone_number', models.CharField(blank=True, max_length=20)),
-                ('picture', models.ImageField(blank=True, null=True, upload_to='users/pictures')),
+                ('title', models.CharField(max_length=255)),
+                ('photo', models.ImageField(upload_to='posts/photos')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('profile', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.Profile')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
     ]
