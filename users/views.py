@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.decorators import login_required
 
+from django.contrib.auth.models import User
+from users.models import Profile
+from django.db.utils import IntegrityError
+from users.forms import ProfileForm
 # Create your views here.
 def login_view(request):
     if request.method=='POST':
@@ -20,3 +24,56 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('logout')
+
+def signup(request):
+    if request.method=='POST':
+        username=request.POST["username"]
+        pwd=request.POST["password"]
+        pwd_confirmation=request.POST["password_confirmation"]
+
+        if pwd!=pwd_confirmation:
+            return render(request,'users/signup.html',{"error":"Password confirmation does not match"})
+        try:
+            user=User.objects.create_user(username=username,password=pwd)
+        except IntegrityError:
+            return render(request,'users/signup.html',{'error':'Username is already in user'})
+        
+        user.first_name=request.POST["first_name"]
+        user.last_name=request.POST["last_name"]
+        user.email=request.POST["email"]
+        user.save()
+        profile=Profile(user=user)
+        profile.save()
+
+        return redirect('login')
+
+    return render(request,"users/signup.html")
+
+@login_required
+def update_profile(request):
+    
+    profile=request.user.profile
+    if request.method=='POST':
+        form=ProfileForm(request.POST,request.FILES)
+        if form.is_valid():
+            data = form.cleaned_data
+
+            profile.website = data['website']
+            profile.phone_number = data['phone_number']
+            profile.biography = data['biography']
+            profile.picture = data['picture']
+            profile.save()
+
+            return redirect('update_profile')
+    else:
+        form=ProfileForm()
+    return render(
+        request=request,
+        template_name='users/update_profile.html',
+        context={
+            'profile':profile,
+            'user':request.user,
+            'form':form
+        }
+    )
+    
